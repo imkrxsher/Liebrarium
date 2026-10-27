@@ -1,0 +1,1248 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Perpustakaan Kresek</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* ─── Design tokens ───────────────────────────────────────────────────────── */
+/* Layout: sidebar nav + main content area; cards for books */
+:root {
+  --bg:        #f7f5f0;
+  --surface:   #ffffff;
+  --surface2:  #f0ede6;
+  --border:    #ddd9d0;
+  --fg:        #1e1b16;
+  --fg2:       #6b6457;
+  --accent:    #8b5e3c;
+  --accent-bg: #f5ece4;
+  --green:     #2d7a4f;
+  --green-bg:  #e8f5ee;
+  --red:       #b53b3b;
+  --red-bg:    #fbeaea;
+  --amber:     #996633;
+  --amber-bg:  #fdf3e3;
+  --shadow:    0 1px 4px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #1a1713;
+    --surface:   #252118;
+    --surface2:  #2e2a22;
+    --border:    #3d3830;
+    --fg:        #f0ece4;
+    --fg2:       #a09580;
+    --accent:    #c48b5e;
+    --accent-bg: #30201a;
+    --green:     #5cb87a;
+    --green-bg:  #162614;
+    --red:       #e07070;
+    --red-bg:    #2a1010;
+    --amber:     #d4a055;
+    --amber-bg:  #261b0a;
+    --shadow:    0 1px 4px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.2);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #1a1713;
+  --surface:   #252118;
+  --surface2:  #2e2a22;
+  --border:    #3d3830;
+  --fg:        #f0ece4;
+  --fg2:       #a09580;
+  --accent:    #c48b5e;
+  --accent-bg: #30201a;
+  --green:     #5cb87a;
+  --green-bg:  #162614;
+  --red:       #e07070;
+  --red-bg:    #2a1010;
+  --amber:     #d4a055;
+  --amber-bg:  #261b0a;
+  --shadow:    0 1px 4px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.2);
+  color-scheme: dark;
+}
+
+/* ─── Reset & base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100%;
+  padding-left:  max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+}
+h1, h2, h3 { font-family: 'Lora', Georgia, serif; text-wrap: balance; }
+button { cursor: pointer; font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+@media (max-width: 680px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.header {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+}
+.header-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.header-logo span { color: var(--fg); font-weight: 400; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.owner-badge {
+  font-size: .72rem;
+  font-weight: 600;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: .04em;
+}
+.notif-btn {
+  position: relative;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--fg2);
+  font-size: .9rem;
+  transition: background .15s;
+}
+.notif-btn:hover { background: var(--surface2); }
+.notif-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+}
+
+/* ─── Sidebar nav ────────────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+}
+@media (max-width: 680px) {
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+  }
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: var(--fg2);
+  font-size: .875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  border-left: 3px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+.nav-item:hover { background: var(--surface2); color: var(--fg); }
+.nav-item.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+@media (max-width: 680px) {
+  .nav-item { border-left: none; border-bottom: 3px solid transparent; padding: 8px 14px; }
+  .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+}
+.nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+.nav-count {
+  margin-left: auto;
+  font-size: .7rem;
+  font-weight: 700;
+  background: var(--red);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Main content ───────────────────────────────────────────────────────── */
+.main {
+  padding: 24px 24px 40px;
+  overflow-y: auto;
+  min-width: 0;
+}
+@media (max-width: 680px) { .main { padding: 16px 0 40px; } }
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── Page header ────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.page-title { font-size: 1.4rem; font-weight: 700; }
+.page-sub { font-size: .85rem; color: var(--fg2); margin-top: 2px; }
+.page-actions { margin-left: auto; }
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: .875rem;
+  font-weight: 600;
+  border: none;
+  transition: opacity .15s, transform .1s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: .88; }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+.btn-outline:hover { background: var(--surface2); }
+.btn-sm { padding: 5px 11px; font-size: .8rem; border-radius: 7px; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { opacity: .85; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { opacity: .88; }
+
+/* ─── Status chips ───────────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: .03em;
+}
+.chip-available { background: var(--green-bg); color: var(--green); }
+.chip-borrowed  { background: var(--red-bg);   color: var(--red);   }
+.chip-queued    { background: var(--amber-bg);  color: var(--amber); }
+
+/* ─── Book cards grid ────────────────────────────────────────────────────── */
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.book-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.book-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.book-thumb {
+  width: 44px;
+  height: 60px;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.book-info { flex: 1; min-width: 0; }
+.book-title {
+  font-family: 'Lora', serif;
+  font-size: .98rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.book-author { font-size: .8rem; color: var(--fg2); margin-top: 2px; }
+.book-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.book-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
+/* ─── Table (peminjaman aktif) ───────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .855rem;
+  background: var(--surface);
+}
+thead { background: var(--surface2); }
+th {
+  text-align: left;
+  padding: 11px 14px;
+  font-weight: 600;
+  font-size: .78rem;
+  letter-spacing: .04em;
+  color: var(--fg2);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+.overdue-row { background: var(--red-bg); }
+
+/* ─── Queue list ─────────────────────────────────────────────────────────── */
+.queue-list { display: flex; flex-direction: column; gap: 10px; }
+.queue-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+.queue-rank {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.queue-info { flex: 1; min-width: 0; }
+.queue-book { font-weight: 600; font-size: .9rem; }
+.queue-borrower { font-size: .8rem; color: var(--fg2); margin-top: 2px; }
+
+/* ─── Notifications ──────────────────────────────────────────────────────── */
+.notif-list { display: flex; flex-direction: column; gap: 10px; }
+.notif-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+.notif-icon {
+  font-size: 1.3rem;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--amber-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { font-weight: 600; font-size: .9rem; }
+.notif-desc  { font-size: .8rem; color: var(--fg2); margin-top: 2px; }
+.notif-time  { font-size: .72rem; color: var(--fg2); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.notif-unread { border-left: 3px solid var(--accent); }
+
+/* ─── Modal ──────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px max(20px, env(safe-area-inset-left,0px));
+}
+.modal-overlay[hidden] { display: none !important; }
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.modal-title {
+  font-family: 'Lora', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: .8rem; font-weight: 600; color: var(--fg2); letter-spacing: .03em; }
+.form-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 13px;
+  font-size: .9rem;
+  color: var(--fg);
+  width: 100%;
+  transition: border-color .15s;
+}
+.form-input:focus { outline: none; border-color: var(--accent); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ─── Empty state ────────────────────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--fg2);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-title { font-size: 1rem; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+.empty-sub { font-size: .85rem; }
+
+/* ─── Loading ────────────────────────────────────────────────────────────── */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--fg2);
+  font-size: .9rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* ─── Stats row ──────────────────────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.stat-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label { font-size: .78rem; color: var(--fg2); margin-top: 4px; font-weight: 500; }
+
+/* ─── Toast ──────────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--fg);
+  color: var(--bg);
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: .875rem;
+  font-weight: 500;
+  z-index: 100;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">📚 <span>Perpustakaan</span> Kresek</div>
+    <div class="header-right">
+      <span class="owner-badge" id="ownerBadge" hidden>Pemilik</span>
+      <button class="notif-btn" onclick="showPage('notifikasi')" title="Notifikasi">
+        🔔 <span class="notif-dot" id="notifDot" hidden></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="nav-item active" data-page="beranda" onclick="showPage('beranda')">
+      <span class="nav-icon">🏠</span> Beranda
+    </div>
+    <div class="nav-item" data-page="koleksi" onclick="showPage('koleksi')">
+      <span class="nav-icon">📖</span> Koleksi Buku
+    </div>
+    <div class="nav-item" data-page="dipinjam" onclick="showPage('dipinjam')">
+      <span class="nav-icon">🔖</span> Sedang Dipinjam
+      <span class="nav-count" id="borrowCount" hidden>0</span>
+    </div>
+    <div class="nav-item" data-page="antrian" onclick="showPage('antrian')">
+      <span class="nav-icon">⏳</span> Antrian
+      <span class="nav-count" id="queueCount" hidden>0</span>
+    </div>
+    <div class="nav-item" data-page="notifikasi" onclick="showPage('notifikasi')">
+      <span class="nav-icon">🔔</span> Notifikasi
+      <span class="nav-count" id="unreadCount" hidden>0</span>
+    </div>
+    <div class="nav-item owner-only" data-page="tambah" onclick="openAddBook()" id="navTambah" hidden>
+      <span class="nav-icon">➕</span> Tambah Buku
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── Beranda ───────────────────────────────────────────────────────── -->
+    <section class="page active" id="page-beranda">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Selamat Datang 👋</div>
+          <div class="page-sub" id="welcomeSub">Muat koleksi buku…</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotal">–</div>
+          <div class="stat-label">Total Buku</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAvail">–</div>
+          <div class="stat-label">Tersedia</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statBorrowed">–</div>
+          <div class="stat-label">Dipinjam</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statQueued">–</div>
+          <div class="stat-label">Antrian</div>
+        </div>
+      </div>
+      <div class="page-header" style="margin-bottom:14px">
+        <div class="page-title" style="font-size:1.1rem">Buku Tersedia</div>
+      </div>
+      <div class="books-grid" id="homeBookGrid">
+        <div class="loading"><span class="spinner"></span>Memuat…</div>
+      </div>
+    </section>
+
+    <!-- ── Koleksi ────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-koleksi">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Koleksi Buku</div>
+          <div class="page-sub">Semua buku dalam koleksi</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary owner-only" id="addBookBtn" hidden onclick="openAddBook()">➕ Tambah Buku</button>
+        </div>
+      </div>
+      <div class="books-grid" id="allBooksGrid">
+        <div class="loading"><span class="spinner"></span>Memuat…</div>
+      </div>
+    </section>
+
+    <!-- ── Sedang Dipinjam ────────────────────────────────────────────────── -->
+    <section class="page" id="page-dipinjam">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Sedang Dipinjam</div>
+          <div class="page-sub">Buku yang saat ini keluar dari koleksi</div>
+        </div>
+      </div>
+      <div id="borrowedContent">
+        <div class="loading"><span class="spinner"></span>Memuat…</div>
+      </div>
+    </section>
+
+    <!-- ── Antrian ────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-antrian">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Antrian Peminjaman</div>
+          <div class="page-sub">Permintaan yang menunggu giliran</div>
+        </div>
+      </div>
+      <div id="queueContent">
+        <div class="loading"><span class="spinner"></span>Memuat…</div>
+      </div>
+    </section>
+
+    <!-- ── Notifikasi ─────────────────────────────────────────────────────── -->
+    <section class="page" id="page-notifikasi">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Notifikasi</div>
+          <div class="page-sub">Pengingat pengembalian & aktivitas terkini</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="markAllRead()">✓ Tandai semua dibaca</button>
+        </div>
+      </div>
+      <div id="notifContent">
+        <div class="loading"><span class="spinner"></span>Memuat…</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Modal: Tambah Buku ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalAddBook" hidden>
+  <div class="modal">
+    <div class="modal-title">Tambah Buku Baru</div>
+    <div class="form-field">
+      <label class="form-label" for="inputTitle">Judul Buku *</label>
+      <input class="form-input" id="inputTitle" type="text" placeholder="Cth: Laskar Pelangi">
+    </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label" for="inputAuthor">Penulis *</label>
+        <input class="form-input" id="inputAuthor" type="text" placeholder="Cth: Andrea Hirata">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="inputYear">Tahun</label>
+        <input class="form-input" id="inputYear" type="number" placeholder="2005">
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="inputGenre">Genre / Kategori</label>
+      <input class="form-input" id="inputGenre" type="text" placeholder="Cth: Novel, Fiksi">
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="inputEmoji">Ikon (emoji)</label>
+      <input class="form-input" id="inputEmoji" type="text" placeholder="📗" maxlength="4">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalAddBook')">Batal</button>
+      <button class="btn btn-primary" onclick="saveBook()">Simpan Buku</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Pinjam Buku ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalBorrow" hidden>
+  <div class="modal">
+    <div class="modal-title" id="modalBorrowTitle">Pinjam Buku</div>
+    <div class="form-field">
+      <label class="form-label" for="inputBorrower">Nama Peminjam *</label>
+      <input class="form-input" id="inputBorrower" type="text" placeholder="Nama lengkap peminjam">
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="inputContact">Kontak (WA/Email)</label>
+      <input class="form-input" id="inputContact" type="text" placeholder="Cth: 08xxxxxx / email@...">
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="inputDue">Batas Pengembalian *</label>
+      <input class="form-input" id="inputDue" type="date">
+    </div>
+    <input type="hidden" id="borrowBookId">
+    <input type="hidden" id="borrowMode"> <!-- 'borrow' or 'queue' -->
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalBorrow')">Batal</button>
+      <button class="btn btn-primary" id="confirmBorrowBtn" onclick="confirmBorrow()">Pinjam</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Konfirmasi Kembali ──────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalReturn" hidden>
+  <div class="modal">
+    <div class="modal-title">Konfirmasi Pengembalian</div>
+    <p style="font-size:.9rem;color:var(--fg2);line-height:1.6" id="returnMsg"></p>
+    <input type="hidden" id="returnBorrowId">
+    <input type="hidden" id="returnBookId">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalReturn')">Batal</button>
+      <button class="btn btn-green" onclick="confirmReturn()">✓ Konfirmasi Kembali</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+let db = null, user = null, userId = null, isOwner = false;
+let books = {}, borrows = {}, queues = {}, notifications = {};
+let unsubs = [];
+const LOAN_DAYS_DEFAULT = 14;
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    db   = await window.claude?.use('db');
+    user = await window.claude?.use('user');
+  } catch(e) {}
+
+  if (!db) {
+    document.getElementById('welcomeSub').textContent = 'Koneksi database tidak tersedia.';
+    return;
+  }
+
+  // Get user identity
+  if (user) {
+    try {
+      userId  = await user.id();
+      isOwner = user.isOwner?.() ?? false;
+    } catch(e) {}
+  }
+
+  if (isOwner) {
+    document.getElementById('ownerBadge').hidden = false;
+    document.querySelectorAll('.owner-only').forEach(el => el.hidden = false);
+  }
+
+  subscribeAll();
+  checkOverdueLoop();
+}
+
+// ─── Subscriptions ────────────────────────────────────────────────────────────
+function subscribeAll() {
+  // Books
+  unsubs.push(
+    db.collection('books').onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type === 'removed') delete books[ch.doc.id];
+        else books[ch.doc.id] = { id: ch.doc.id, ...ch.doc.data() };
+      });
+      renderAll();
+    }, console.error)
+  );
+
+  // Borrows
+  unsubs.push(
+    db.collection('borrows').onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type === 'removed') delete borrows[ch.doc.id];
+        else borrows[ch.doc.id] = { id: ch.doc.id, ...ch.doc.data() };
+      });
+      renderAll();
+    }, console.error)
+  );
+
+  // Queue
+  unsubs.push(
+    db.collection('queues').onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type === 'removed') delete queues[ch.doc.id];
+        else queues[ch.doc.id] = { id: ch.doc.id, ...ch.doc.data() };
+      });
+      renderAll();
+    }, console.error)
+  );
+
+  // Notifications
+  unsubs.push(
+    db.collection('notifications').onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        if (ch.type === 'removed') delete notifications[ch.doc.id];
+        else notifications[ch.doc.id] = { id: ch.doc.id, ...ch.doc.data() };
+      });
+      renderNotifications();
+    }, console.error)
+  );
+}
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+function getBookStatus(bookId) {
+  const active = Object.values(borrows).find(b => b.bookId === bookId && b.active);
+  if (active) return { status: 'borrowed', borrow: active };
+  return { status: 'available' };
+}
+
+function getBookQueue(bookId) {
+  return Object.values(queues)
+    .filter(q => q.bookId === bookId && q.active)
+    .sort((a, b) => a.createdAt - b.createdAt);
+}
+
+function renderAll() {
+  renderStats();
+  renderHomeGrid();
+  renderAllBooks();
+  renderBorrowedTable();
+  renderQueueList();
+  updateCounts();
+}
+
+function renderStats() {
+  const all    = Object.values(books);
+  const activeBorrows = Object.values(borrows).filter(b => b.active);
+  const activeQueues  = Object.values(queues).filter(q => q.active);
+  const avail  = all.filter(b => !activeBorrows.find(br => br.bookId === b.id));
+
+  document.getElementById('statTotal').textContent   = all.length;
+  document.getElementById('statAvail').textContent   = avail.length;
+  document.getElementById('statBorrowed').textContent = activeBorrows.length;
+  document.getElementById('statQueued').textContent  = activeQueues.length;
+  document.getElementById('welcomeSub').textContent  =
+    `${all.length} buku — ${avail.length} tersedia, ${activeBorrows.length} dipinjam`;
+}
+
+function makeBookCard(book, homeMode = false) {
+  const { status, borrow } = getBookStatus(book.id);
+  const q = getBookQueue(book.id);
+  const emoji = book.emoji || '📘';
+  const chipHtml = status === 'available'
+    ? `<span class="chip chip-available">● Tersedia</span>`
+    : `<span class="chip chip-borrowed">● Dipinjam</span>`;
+  const queueChip = q.length ? `<span class="chip chip-queued">⏳ ${q.length} antrian</span>` : '';
+
+  let actions = '';
+  if (isOwner) {
+    if (status === 'available') {
+      actions = `<button class="btn btn-primary btn-sm" onclick="openBorrow('${book.id}','borrow')">📤 Pinjamkan</button>
+                 <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="deleteBook('${book.id}')">🗑</button>`;
+    } else {
+      actions = `<button class="btn btn-green btn-sm" onclick="openReturn('${borrow?.id}','${book.id}')">📥 Kembalikan</button>
+                 <button class="btn btn-outline btn-sm" onclick="openBorrow('${book.id}','queue')">⏳ Tambah Antrian</button>`;
+    }
+  } else {
+    if (status === 'available') {
+      actions = `<button class="btn btn-primary btn-sm" onclick="openBorrow('${book.id}','borrow')">📤 Minta Pinjam</button>`;
+    } else {
+      actions = `<button class="btn btn-outline btn-sm" onclick="openBorrow('${book.id}','queue')">⏳ Masuk Antrian</button>`;
+    }
+  }
+
+  return `
+  <div class="book-card">
+    <div class="book-card-top">
+      <div class="book-thumb">${emoji}</div>
+      <div class="book-info">
+        <div class="book-title">${esc(book.title)}</div>
+        <div class="book-author">${esc(book.author)}${book.year ? ` · ${book.year}` : ''}</div>
+        ${book.genre ? `<div class="book-author" style="margin-top:3px">${esc(book.genre)}</div>` : ''}
+      </div>
+    </div>
+    <div class="book-meta">
+      ${chipHtml}
+      ${queueChip}
+      ${status === 'borrowed' && borrow ? `<span style="font-size:.75rem;color:var(--fg2)">📅 ${fmtDate(borrow.dueDate)}</span>` : ''}
+    </div>
+    <div class="book-actions">${actions}</div>
+  </div>`;
+}
+
+function renderHomeGrid() {
+  const avail = Object.values(books).filter(b => getBookStatus(b.id).status === 'available');
+  const el = document.getElementById('homeBookGrid');
+  if (!avail.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada buku tersedia</div><div class="empty-sub">Semua buku sedang dipinjam atau koleksi kosong.</div></div>`;
+    return;
+  }
+  el.innerHTML = avail.map(b => makeBookCard(b, true)).join('');
+}
+
+function renderAllBooks() {
+  const all = Object.values(books).sort((a,b) => a.title.localeCompare(b.title));
+  const el = document.getElementById('allBooksGrid');
+  if (!all.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📚</div><div class="empty-title">Koleksi masih kosong</div><div class="empty-sub">${isOwner ? 'Tambahkan buku pertama Anda.' : 'Pemilik belum menambahkan buku.'}</div></div>`;
+    return;
+  }
+  el.innerHTML = all.map(b => makeBookCard(b)).join('');
+}
+
+function renderBorrowedTable() {
+  const active = Object.values(borrows).filter(b => b.active)
+    .sort((a,b) => a.dueDate?.localeCompare(b.dueDate));
+  const el = document.getElementById('borrowedContent');
+  if (!active.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">Tidak ada yang dipinjam</div><div class="empty-sub">Semua buku ada di koleksi.</div></div>`;
+    return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  const rows = active.map(b => {
+    const book   = books[b.bookId] || {};
+    const overdue = b.dueDate < today;
+    return `<tr class="${overdue ? 'overdue-row' : ''}">
+      <td><strong>${esc(book.title || '–')}</strong><br><span style="font-size:.75rem;color:var(--fg2)">${book.author || ''}</span></td>
+      <td>${esc(b.borrowerName)}</td>
+      <td>${esc(b.contact || '–')}</td>
+      <td style="font-variant-numeric:tabular-nums">${fmtDate(b.borrowDate)}</td>
+      <td style="font-variant-numeric:tabular-nums">${fmtDate(b.dueDate)} ${overdue ? '<span class="chip chip-borrowed" style="font-size:.65rem">Terlambat</span>' : ''}</td>
+      ${isOwner ? `<td><button class="btn btn-green btn-sm" onclick="openReturn('${b.id}','${b.bookId}')">📥 Kembalikan</button></td>` : '<td></td>'}
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Buku</th><th>Peminjam</th><th>Kontak</th><th>Tgl Pinjam</th><th>Batas Kembali</th>${isOwner ? '<th>Aksi</th>' : '<th></th>'}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function renderQueueList() {
+  const active = Object.values(queues).filter(q => q.active)
+    .sort((a,b) => a.createdAt - b.createdAt);
+  const el = document.getElementById('queueContent');
+  if (!active.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Antrian kosong</div><div class="empty-sub">Tidak ada permintaan yang menunggu.</div></div>`;
+    return;
+  }
+  const grouped = {};
+  active.forEach(q => {
+    if (!grouped[q.bookId]) grouped[q.bookId] = [];
+    grouped[q.bookId].push(q);
+  });
+
+  let html = '<div class="queue-list">';
+  Object.entries(grouped).forEach(([bookId, qs]) => {
+    const book = books[bookId] || {};
+    html += `<div style="margin-bottom:8px;font-size:.8rem;font-weight:600;color:var(--fg2);letter-spacing:.03em;text-transform:uppercase">${esc(book.title || 'Buku Tidak Dikenal')}</div>`;
+    qs.forEach((q, i) => {
+      html += `<div class="queue-item">
+        <div class="queue-rank">${i+1}</div>
+        <div class="queue-info">
+          <div class="queue-book">${esc(q.borrowerName)}</div>
+          <div class="queue-borrower">📞 ${esc(q.contact || '–')} &nbsp;·&nbsp; Didaftarkan ${fmtDate(q.createdAt)}</div>
+        </div>
+        ${isOwner ? `<button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="removeQueue('${q.id}')">✕ Hapus</button>` : ''}
+      </div>`;
+    });
+    html += '<div style="margin-bottom:16px"></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderNotifications() {
+  const all = Object.values(notifications).sort((a,b) => b.createdAt - a.createdAt);
+  const el  = document.getElementById('notifContent');
+  const unread = all.filter(n => !n.read).length;
+
+  const unreadEl = document.getElementById('unreadCount');
+  const notifDot = document.getElementById('notifDot');
+  if (unread > 0) {
+    unreadEl.textContent = unread;
+    unreadEl.hidden = false;
+    notifDot.hidden = false;
+  } else {
+    unreadEl.hidden = true;
+    notifDot.hidden = true;
+  }
+
+  if (!all.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">Belum ada notifikasi</div><div class="empty-sub">Pengingat pengembalian akan muncul di sini.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="notif-list">` + all.map(n => `
+    <div class="notif-item ${n.read ? '' : 'notif-unread'}">
+      <div class="notif-icon">${n.icon || '🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-title">${esc(n.title)}</div>
+        <div class="notif-desc">${esc(n.body)}</div>
+        <div class="notif-time">${timeAgo(n.createdAt)}</div>
+      </div>
+      ${!n.read ? `<button class="btn btn-outline btn-sm" onclick="markRead('${n.id}')">✓</button>` : ''}
+    </div>`).join('') + `</div>`;
+}
+
+function updateCounts() {
+  const bCount = Object.values(borrows).filter(b => b.active).length;
+  const qCount = Object.values(queues).filter(q => q.active).length;
+  const bcEl = document.getElementById('borrowCount');
+  const qcEl = document.getElementById('queueCount');
+  bcEl.hidden  = bCount === 0;  bcEl.textContent = bCount;
+  qcEl.hidden  = qCount === 0;  qcEl.textContent = qCount;
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+  document.querySelector(`[data-page="${name}"]`)?.classList.add('active');
+}
+
+// ─── Owner: Tambah Buku ───────────────────────────────────────────────────────
+function openAddBook() {
+  ['inputTitle','inputAuthor','inputYear','inputGenre','inputEmoji'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('modalAddBook').hidden = false;
+}
+
+async function saveBook() {
+  const title  = document.getElementById('inputTitle').value.trim();
+  const author = document.getElementById('inputAuthor').value.trim();
+  if (!title || !author) { toast('Judul dan penulis wajib diisi.'); return; }
+
+  const data = {
+    title,
+    author,
+    year:    document.getElementById('inputYear').value   || '',
+    genre:   document.getElementById('inputGenre').value.trim(),
+    emoji:   document.getElementById('inputEmoji').value.trim() || '📘',
+    addedAt: Date.now(),
+  };
+  try {
+    await db.collection('books').add(data);
+    closeModal('modalAddBook');
+    toast('Buku berhasil ditambahkan!');
+    showPage('koleksi');
+  } catch(e) { toast('Gagal menyimpan buku.'); }
+}
+
+async function deleteBook(bookId) {
+  const bk = books[bookId];
+  if (!bk) return;
+  const { status } = getBookStatus(bookId);
+  if (status === 'borrowed') { toast('Buku masih dipinjam, tidak bisa dihapus.'); return; }
+  if (!confirm(`Hapus "${bk.title}" dari koleksi?`)) return;
+  try {
+    await db.doc('books/' + bookId).delete();
+    toast('Buku dihapus.');
+  } catch(e) { toast('Gagal menghapus.'); }
+}
+
+// ─── Pinjam / Antrian ─────────────────────────────────────────────────────────
+function openBorrow(bookId, mode) {
+  const book = books[bookId];
+  if (!book) return;
+  document.getElementById('borrowBookId').value = bookId;
+  document.getElementById('borrowMode').value   = mode;
+  document.getElementById('inputBorrower').value = '';
+  document.getElementById('inputContact').value  = '';
+  const due = new Date(); due.setDate(due.getDate() + LOAN_DAYS_DEFAULT);
+  document.getElementById('inputDue').value = due.toISOString().slice(0,10);
+
+  const isQueue = mode === 'queue';
+  document.getElementById('modalBorrowTitle').textContent  = isQueue
+    ? `⏳ Masuk Antrian: ${book.title}` : `📤 Pinjam: ${book.title}`;
+  document.getElementById('confirmBorrowBtn').textContent  = isQueue ? 'Masuk Antrian' : 'Pinjam';
+  document.getElementById('inputDue').closest('.form-field').style.display = isQueue ? 'none' : '';
+  document.getElementById('modalBorrow').hidden = false;
+}
+
+async function confirmBorrow() {
+  const bookId = document.getElementById('borrowBookId').value;
+  const mode   = document.getElementById('borrowMode').value;
+  const name   = document.getElementById('inputBorrower').value.trim();
+  const contact = document.getElementById('inputContact').value.trim();
+  const due    = document.getElementById('inputDue').value;
+
+  if (!name) { toast('Nama peminjam wajib diisi.'); return; }
+  if (mode === 'borrow' && !due) { toast('Batas pengembalian wajib diisi.'); return; }
+
+  try {
+    if (mode === 'borrow') {
+      await db.collection('borrows').add({
+        bookId,
+        borrowerName: name,
+        contact,
+        borrowDate: new Date().toISOString().slice(0,10),
+        dueDate: due,
+        active: true,
+        createdAt: Date.now(),
+      });
+      // Notif pengingat
+      await addNotification('📤', 'Buku Dipinjam', `"${books[bookId]?.title}" dipinjam oleh ${name}. Batas kembali: ${fmtDate(due)}.`);
+    } else {
+      await db.collection('queues').add({
+        bookId,
+        borrowerName: name,
+        contact,
+        active: true,
+        createdAt: Date.now(),
+      });
+      await addNotification('⏳', 'Masuk Antrian', `${name} mendaftar antrian untuk "${books[bookId]?.title}".`);
+    }
+    closeModal('modalBorrow');
+    toast(mode === 'borrow' ? 'Berhasil dipinjamkan!' : 'Berhasil masuk antrian!');
+  } catch(e) { toast('Gagal menyimpan.'); }
+}
+
+// ─── Kembalikan ───────────────────────────────────────────────────────────────
+function openReturn(borrowId, bookId) {
+  const borrow = borrows[borrowId];
+  const book   = books[bookId];
+  if (!borrow || !book) return;
+  document.getElementById('returnBorrowId').value = borrowId;
+  document.getElementById('returnBookId').value   = bookId;
+  document.getElementById('returnMsg').textContent =
+    `Konfirmasi pengembalian "${book.title}" oleh ${borrow.borrowerName}?`;
+  document.getElementById('modalReturn').hidden = false;
+}
+
+async function confirmReturn() {
+  const borrowId = document.getElementById('returnBorrowId').value;
+  const bookId   = document.getElementById('returnBookId').value;
+  const borrow   = borrows[borrowId];
+  const book     = books[bookId];
+  try {
+    await db.doc('borrows/' + borrowId).update({ active: false, returnedAt: Date.now() });
+
+    // Promosikan antrian pertama
+    const q = getBookQueue(bookId);
+    if (q.length) {
+      const next = q[0];
+      const due  = new Date(); due.setDate(due.getDate() + LOAN_DAYS_DEFAULT);
+      await db.collection('borrows').add({
+        bookId,
+        borrowerName: next.borrowerName,
+        contact: next.contact,
+        borrowDate: new Date().toISOString().slice(0,10),
+        dueDate: due.toISOString().slice(0,10),
+        active: true,
+        createdAt: Date.now(),
+        fromQueue: true,
+      });
+      await db.doc('queues/' + next.id).update({ active: false });
+      await addNotification('🎉', 'Antrian Dipromosikan',
+        `"${book?.title}" sekarang dipinjam oleh ${next.borrowerName} (dari antrian).`);
+    } else {
+      await addNotification('📥', 'Buku Dikembalikan',
+        `"${book?.title}" telah dikembalikan oleh ${borrow?.borrowerName}.`);
+    }
+    closeModal('modalReturn');
+    toast('Buku berhasil dikembalikan!');
+  } catch(e) { toast('Gagal memproses pengembalian.'); }
+}
+
+// ─── Antrian ──────────────────────────────────────────────────────────────────
+async function removeQueue(queueId) {
+  try {
+    await db.doc('queues/' + queueId).update({ active: false });
+    toast('Antrian dihapus.');
+  } catch(e) { toast('Gagal.'); }
+}
+
+// ─── Notifikasi ───────────────────────────────────────────────────────────────
+async function addNotification(icon, title, body) {
+  try {
+    await db.collection('notifications').add({ icon, title, body, read: false, createdAt: Date.now() });
+  } catch(e) {}
+}
+
+async function markRead(id) {
+  try { await db.doc('notifications/' + id).update({ read: true }); } catch(e) {}
+}
+
+async function markAllRead() {
+  const unread = Object.values(notifications).filter(n => !n.read);
+  for (const n of unread) {
+    try { await db.doc('notifications/' + n.id).update({ read: true }); } catch(e) {}
+  }
+}
+
+// ─── Overdue check ────────────────────────────────────────────────────────────
+function checkOverdueLoop() {
+  checkOverdue();
+  setInterval(checkOverdue, 6 * 60 * 60 * 1000); // every 6h
+}
+
+async function checkOverdue() {
+  if (!db) return;
+  const today = new Date().toISOString().slice(0,10);
+  const active = Object.values(borrows).filter(b => b.active && b.dueDate);
+  for (const b of active) {
+    // Overdue
+    if (b.dueDate < today && !b.overdueNotified) {
+      const book = books[b.bookId];
+      await addNotification('⚠️', 'Buku Terlambat Dikembalikan',
+        `"${book?.title || 'Buku'}" oleh ${b.borrowerName} melewati batas ${fmtDate(b.dueDate)}.`);
+      try { await db.doc('borrows/' + b.id).update({ overdueNotified: true }); } catch(e) {}
+    }
+    // 2 hari sebelum jatuh tempo
+    const diff = daysDiff(today, b.dueDate);
+    if (diff === 2 && !b.reminderNotified) {
+      const book = books[b.bookId];
+      await addNotification('⏰', 'Pengingat: 2 Hari Lagi',
+        `"${book?.title || 'Buku'}" oleh ${b.borrowerName} jatuh tempo ${fmtDate(b.dueDate)}.`);
+      try { await db.doc('borrows/' + b.id).update({ reminderNotified: true }); } catch(e) {}
+    }
+  }
+}
+
+function daysDiff(from, to) {
+  const a = new Date(from), b = new Date(to);
+  return Math.round((b - a) / 86400000);
+}
+
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(v) {
+  if (!v) return '–';
+  if (typeof v === 'number') v = new Date(v).toISOString().slice(0,10);
+  const [y,m,d] = v.toString().split('-');
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  return `${+d} ${months[+m-1]} ${y}`;
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  if (diff < 60000)   return 'Baru saja';
+  if (diff < 3600000) return `${Math.floor(diff/60000)} menit lalu`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)} jam lalu`;
+  return `${Math.floor(diff/86400000)} hari lalu`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function closeModal(id) {
+  document.getElementById(id).hidden = true;
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.hidden = true;
+  });
+});
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+init();
+</script>
+
+</body></html>
